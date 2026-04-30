@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parcial RA3 - Decisiones Administrativas</title>
+  <style>
+    :root {
+      --bg: #f6f1e8;
+      --paper: #fffdf8;
+      --ink: #1f2933;
+      --muted: #5f6c76;
+      --line: #d8cfbf;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --accent-soft: #dff6f2;
+      --warn: #9a3412;
+      --warn-soft: #fff0e6;
+      --ok: #166534;
+      --ok-soft: #dcfce7;
+      --shadow: 0 18px 42px rgba(31, 41, 51, 0.10);
+      --radius: 22px;
+      --font-main: "Avenir Next", "Segoe UI", sans-serif;
+      --font-display: "Georgia", serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--font-main);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(180, 83, 9, 0.10), transparent 25%),
+        linear-gradient(180deg, #faf7f1 0%, var(--bg) 100%);
+    }
+
+    .wrap {
+      width: min(1020px, calc(100% - 24px));
+      margin: 24px auto 60px;
+    }
+
+    .card, .question, .result-card, .status-bar {
+      background: rgba(255, 253, 248, 0.94);
+      border: 1px solid rgba(216, 207, 191, 0.95);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero, .panel, .guide {
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -42px;
+      bottom: -42px;
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(15, 118, 110, 0.18), rgba(180, 83, 9, 0.10));
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 0.92rem;
+    }
+
+    h1, h2, h3 { margin: 0; }
+
+    h1 {
+      margin-top: 12px;
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1.05;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      margin-bottom: 14px;
+    }
+
+    p {
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .sub {
+      margin-top: 14px;
+      color: var(--muted);
+      max-width: 76ch;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      margin-top: 20px;
+    }
+
+    .mini {
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(216, 207, 191, 0.95);
+    }
+
+    .mini strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .warning {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: var(--warn-soft);
+      color: var(--warn);
+      font-weight: 700;
+    }
+
+    .meta-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    label {
+      display: block;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font: inherit;
+    }
+
+    .detected-name {
+      width: 100%;
+      min-height: 54px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      font-weight: 700;
+    }
+
+    .detected-name.is-pending { color: var(--muted); font-weight: 500; }
+    .detected-name.is-invalid { color: var(--warn); background: #fff7ed; border-color: #fdba74; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 20px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: linear-gradient(135deg, #1b8aa9, #12617a);
+      color: #fff;
+    }
+
+    .status-bar {
+      position: sticky;
+      top: 10px;
+      z-index: 5;
+      margin-bottom: 18px;
+      padding: 14px 16px;
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      background: rgba(31, 41, 51, 0.95);
+      color: #fff;
+    }
+
+    .status-box span {
+      display: block;
+      font-size: 0.8rem;
+      opacity: 0.82;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .status-box strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 1.12rem;
+    }
+
+    .question {
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .question-number {
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .scenario {
+      margin: 14px 0;
+      padding: 14px;
+      border-radius: 16px;
+      background: #f8fafb;
+      border: 1px solid #dde6eb;
+      overflow-x: auto;
+    }
+
+    pre {
+      margin: 0;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.94rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .note, .debug-tip {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      line-height: 1.55;
+    }
+
+    .note {
+      background: #f4f7f8;
+      border: 1px solid #dde6eb;
+      color: var(--muted);
+    }
+
+    .debug-tip {
+      background: #eef7ff;
+      border: 1px solid #c9e0f5;
+      color: #1d4f73;
+    }
+
+    .option {
+      display: block;
+      padding: 14px;
+      margin-top: 10px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .option:has(input:checked) {
+      border-color: var(--accent);
+      background: #f1fbfa;
+    }
+
+    .option input {
+      margin-right: 10px;
+      transform: scale(1.1);
+    }
+
+    .question-feedback {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      line-height: 1.55;
+      border: 1px solid var(--line);
+    }
+
+    .question-feedback.correct {
+      background: var(--ok-soft);
+      color: var(--ok);
+      border-color: #86efac;
+    }
+
+    .question-feedback.wrong {
+      background: var(--warn-soft);
+      color: var(--warn);
+      border-color: #fdba74;
+    }
+
+    .result-card {
+      padding: 24px;
+      margin-top: 24px;
+    }
+
+    .score-big {
+      font-family: var(--font-display);
+      font-size: clamp(3.5rem, 12vw, 6rem);
+      color: var(--ok);
+      line-height: 0.95;
+      margin: 8px 0 10px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: #edf3f6;
+      font-weight: 700;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+
+    .history-table th,
+    .history-table td {
+      padding: 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid #e9e2d6;
+      font-size: 0.95rem;
+    }
+
+    .history-table th {
+      background: #f5f7f8;
+    }
+
+    .history-table tr.current-row {
+      background: #eefcf9;
+      font-weight: 700;
+    }
+
+    .hidden { display: none; }
+    .muted { color: var(--muted); }
+
+    @media (max-width: 640px) {
+      .wrap { width: min(100% - 14px, 1020px); margin-top: 12px; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card hero">
+      <span class="badge">Nuevo parcial • RA3 • Decisiones administrativas</span>
+      <h1>Verificación de soluciones para la toma de decisiones</h1>
+      <p class="sub">
+        Este parcial se enfoca en <strong>pruebas de escritorio</strong>, <strong>lectura del estado de variables</strong>,
+        <strong>automatización administrativa</strong> y <strong>decisiones organizacionales</strong>. La nota máxima es <strong>5.0</strong>.
+      </p>
+      <div class="grid">
+        <div class="mini">
+          <strong>Lo que se evalúa</strong>
+          Analizar qué decisión produce el algoritmo, qué variable sustenta esa decisión y cómo comprobarla paso a paso.
+        </div>
+        <div class="mini">
+          <strong>No debes programar</strong>
+          Puedes responder leyendo el código, revisando las variables y, si quieres, ejecutando el ejemplo en Thonny.
+        </div>
+        <div class="mini">
+          <strong>Registro</strong>
+          Se conserva el registro en las mismas hojas de Google Sheets, con una sola fila por intento.
+        </div>
+      </div>
+      <div class="warning">
+        Antes de iniciar: el sistema contará los intentos de copiar texto y los intentos detectables de activar atajos de captura de pantalla.
+      </div>
+    </section>
+
+    <section class="card guide">
+      <h2>Cómo verificar variables en Thonny</h2>
+      <p class="muted">
+        Si quieres confirmar una respuesta sin modificar la lógica del ejercicio, copia el código en Thonny y ejecútalo con <strong>F5</strong>.
+        Si no ves el panel de variables, abre <strong>Ver &gt; Variables</strong>. También puedes agregar temporalmente una instrucción
+        <code>print(variable)</code> debajo de la línea sugerida en cada pregunta para observar cómo cambia el valor.
+      </p>
+    </section>
+
+    <section class="card panel">
+      <h2>Datos del estudiante</h2>
+      <div class="meta-grid">
+        <div>
+          <label for="studentId">Documento de identidad</label>
+          <input id="studentId" type="text" inputmode="numeric" placeholder="Escribe tu documento sin puntos">
+        </div>
+        <div>
+          <label>Nombre detectado</label>
+          <div id="studentNameDisplay" class="detected-name is-pending">Cargando lista de estudiantes autorizados desde Google Sheets.</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="startBtn" class="primary" type="button">Iniciar parcial</button>
+      </div>
+      <p class="muted" id="startHint">Espera a que la lista de estudiantes se cargue antes de iniciar.</p>
+    </section>
+
+    <div id="statusBar" class="status-bar hidden">
+      <div class="status-box">
+        <span>Hora de inicio</span>
+        <strong id="startTimeLabel">--:--:--</strong>
+      </div>
+      <div class="status-box">
+        <span>Tiempo transcurrido</span>
+        <strong id="timerLabel">00:00</strong>
+      </div>
+      <div class="status-box">
+        <span>Copias</span>
+        <strong id="copyCountLabel">0</strong>
+      </div>
+      <div class="status-box">
+        <span>Capturas</span>
+        <strong id="screenshotCountLabel">0</strong>
+      </div>
+      <div class="status-box">
+        <span>Ctrl/Cmd+C</span>
+        <strong id="ctrlCCountLabel">0</strong>
+      </div>
+    </div>
+
+    <form id="examForm" class="hidden">
+      <div id="questionsHost"></div>
+      <section class="card panel">
+        <h2>Entrega</h2>
+        <p class="muted">Al finalizar se calculará la nota y se enviará un solo registro del intento a tu hoja de seguimiento.</p>
+        <div class="actions">
+          <button class="primary" type="submit">Finalizar y calificar</button>
+        </div>
+      </section>
+    </form>
+
+    <section id="resultCard" class="result-card hidden">
+      <span class="badge">Resultado final</span>
+      <div id="scoreBig" class="score-big">0.0</div>
+      <p id="resultMessage" class="sub"></p>
+      <div class="pill-row">
+        <div class="pill">Intento: <span id="resultAttempt">0</span></div>
+        <div class="pill">Hora de inicio: <span id="resultStart">--:--:--</span></div>
+        <div class="pill">Hora de fin: <span id="resultEnd">--:--:--</span></div>
+        <div class="pill">Copias: <span id="resultCopies">0</span></div>
+        <div class="pill">Capturas: <span id="resultScreenshots">0</span></div>
+        <div class="pill">Ctrl/Cmd+C: <span id="resultCtrlC">0</span></div>
+      </div>
+      <div class="note" id="resultSummary"></div>
+      <div class="note" id="historyTitle">Historial de intentos y notas del estudiante</div>
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Intento</th>
+            <th>Nota</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Duración</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <tr><td colspan="5">Aún no hay historial para mostrar.</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwVtqoacxMFPhaWGHL_4BpgUsxx3Aq-o3c9N5zw89QM3sMYTP_61QSGUaKtW18pyygn/exec";
+
+    let studentRegistry = {};
+    let questions = [];
+
+    const state = {
+      registryLoaded: false,
+      started: false,
+      finished: false,
+      pageOpenedAt: new Date(),
+      startDate: null,
+      endDate: null,
+      studentId: "",
+      studentName: "",
+      attemptNumber: 0,
+      sessionId: crypto.randomUUID ? crypto.randomUUID() : `sesion-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      copyCount: 0,
+      ctrlCCount: 0,
+      screenshotCount: 0,
+      timerId: null
+    };
+
+    const startBtn = document.getElementById("startBtn");
+    const studentIdInput = document.getElementById("studentId");
+    const studentNameDisplay = document.getElementById("studentNameDisplay");
+    const startHint = document.getElementById("startHint");
+    const statusBar = document.getElementById("statusBar");
+    const examForm = document.getElementById("examForm");
+    const questionsHost = document.getElementById("questionsHost");
+    const startTimeLabel = document.getElementById("startTimeLabel");
+    const timerLabel = document.getElementById("timerLabel");
+    const copyCountLabel = document.getElementById("copyCountLabel");
+    const screenshotCountLabel = document.getElementById("screenshotCountLabel");
+    const ctrlCCountLabel = document.getElementById("ctrlCCountLabel");
+    const resultCard = document.getElementById("resultCard");
+    const scoreBig = document.getElementById("scoreBig");
+    const resultMessage = document.getElementById("resultMessage");
+    const resultAttempt = document.getElementById("resultAttempt");
+    const resultStart = document.getElementById("resultStart");
+    const resultEnd = document.getElementById("resultEnd");
+    const resultCopies = document.getElementById("resultCopies");
+    const resultScreenshots = document.getElementById("resultScreenshots");
+    const resultCtrlC = document.getElementById("resultCtrlC");
+    const resultSummary = document.getElementById("resultSummary");
+    const historyBody = document.getElementById("historyBody");
+
+    startBtn.disabled = true;
+
+    function normalizeId(value) {
+      return value.replace(/\D/g, "");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function formatTime(date) {
+      return date.toLocaleTimeString("es-CO", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    }
+
+    function formatDateTime(date) {
+      return date.toLocaleString("es-CO", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    }
+
+    function formatStoredDate(value) {
+      if (!value) {
+        return "";
+      }
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return String(value);
+      }
+      return formatDateTime(date);
+    }
+
+    function updateTimer() {
+      if (!state.started || state.finished || !state.startDate) {
+        return;
+      }
+      const elapsed = Math.floor((Date.now() - state.startDate.getTime()) / 1000);
+      const minutes = String(Math.floor(elapsed / 60)).padStart(2, "0");
+      const seconds = String(elapsed % 60).padStart(2, "0");
+      timerLabel.textContent = `${minutes}:${seconds}`;
+    }
+
+    function updateIntegrityCounters() {
+      copyCountLabel.textContent = state.copyCount;
+      screenshotCountLabel.textContent = state.screenshotCount;
+      ctrlCCountLabel.textContent = state.ctrlCCount;
+    }
+
+    function getAttemptStorageKey(studentId) {
+      return `parcial_ra3_decisiones_attempts_${studentId}`;
+    }
+
+    function getNextAttemptNumber(studentId) {
+      const key = getAttemptStorageKey(studentId);
+      const current = Number(localStorage.getItem(key) || "0");
+      const next = current + 1;
+      localStorage.setItem(key, String(next));
+      return next;
+    }
+
+    function postTrackingEvent(payload) {
+      const body = new URLSearchParams();
+      const enrichedPayload = {
+        ...payload,
+        userAgent: navigator.userAgent,
+        origin: window.location.href
+      };
+      Object.entries(enrichedPayload).forEach(([key, value]) => {
+        body.append(key, typeof value === "string" ? value : JSON.stringify(value));
+      });
+      return fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+        body: body.toString()
+      }).catch(() => null);
+    }
+
+    function loadStudentRegistry() {
+      return new Promise((resolve) => {
+        const callbackName = `studentsCallback_${Date.now()}`;
+        const script = document.createElement("script");
+        const timeoutId = window.setTimeout(() => {
+          cleanup();
+          studentNameDisplay.textContent = "No se pudo cargar la lista de estudiantes.";
+          studentNameDisplay.className = "detected-name is-invalid";
+          startHint.textContent = "Falló la carga de la lista desde Google Sheets.";
+          resolve(false);
+        }, 12000);
+
+        function cleanup() {
+          window.clearTimeout(timeoutId);
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+          try {
+            delete window[callbackName];
+          } catch (error) {
+            window[callbackName] = undefined;
+          }
+        }
+
+        window[callbackName] = (payload) => {
+          cleanup();
+          if (!payload || !payload.ok || !payload.students) {
+            studentNameDisplay.textContent = "La lista recibida es inválida.";
+            studentNameDisplay.className = "detected-name is-invalid";
+            startHint.textContent = "Revisa la configuración del Apps Script.";
+            resolve(false);
+            return;
+          }
+          studentRegistry = payload.students;
+          state.registryLoaded = true;
+          studentNameDisplay.textContent = "Lista cargada. Escribe el documento para validar al estudiante.";
+          studentNameDisplay.className = "detected-name is-pending";
+          startHint.textContent = "La lista de estudiantes ya está cargada.";
+          startBtn.disabled = false;
+          resolve(true);
+        };
+
+        script.src = `${WEB_APP_URL}?action=students&callback=${encodeURIComponent(callbackName)}`;
+        script.onerror = () => {
+          cleanup();
+          studentNameDisplay.textContent = "No fue posible conectar con el web app.";
+          studentNameDisplay.className = "detected-name is-invalid";
+          startHint.textContent = "Verifica la URL del web app.";
+          resolve(false);
+        };
+        document.body.appendChild(script);
+      });
+    }
+
+    function loadAttemptHistory(studentId) {
+      return new Promise((resolve) => {
+        const callbackName = `historyCallback_${Date.now()}`;
+        const script = document.createElement("script");
+        const timeoutId = window.setTimeout(() => {
+          cleanup();
+          resolve([]);
+        }, 12000);
+
+        function cleanup() {
+          window.clearTimeout(timeoutId);
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+          try {
+            delete window[callbackName];
+          } catch (error) {
+            window[callbackName] = undefined;
+          }
+        }
+
+        window[callbackName] = (payload) => {
+          cleanup();
+          if (!payload || !payload.ok || !Array.isArray(payload.attempts)) {
+            resolve([]);
+            return;
+          }
+          resolve(payload.attempts);
+        };
+
+        script.src = `${WEB_APP_URL}?action=history&studentId=${encodeURIComponent(studentId)}&callback=${encodeURIComponent(callbackName)}`;
+        script.onerror = () => {
+          cleanup();
+          resolve([]);
+        };
+        document.body.appendChild(script);
+      });
+    }
+
+    function digitsFromId(studentId) {
+      return normalizeId(studentId).split("").map(Number);
+    }
+
+    function pick(digits, index) {
+      return digits[index % digits.length];
+    }
+
+    function numberedCode(lines) {
+      return lines.map((line, index) => `${String(index + 1).padStart(2, "0")} | ${line}`).join("\n");
+    }
+
+    function placeOptions(correct, distractors, seed) {
+      const index = seed % 4;
+      const finalOptions = [];
+      let distractorIndex = 0;
+      for (let i = 0; i < 4; i += 1) {
+        if (i === index) {
+          finalOptions.push(correct);
+        } else {
+          finalOptions.push(distractors[distractorIndex]);
+          distractorIndex += 1;
+        }
+      }
+      return { finalOptions, correctIndex: index };
+    }
+
+    function buildQuestions(studentId) {
+      const digits = digitsFromId(studentId);
+      const q = [];
+
+      const invoiceValues = [
+        ((pick(digits, 0) % 5) + 3) * 10000,
+        ((pick(digits, 1) % 4) + 2) * 15000,
+        ((pick(digits, 2) % 4) + 2) * 10000
+      ];
+      const totalInvoices = invoiceValues.reduce((sum, value) => sum + value, 0);
+      const approvalThreshold = totalInvoices + ((pick(digits, 3) % 2 === 0) ? 10000 : -10000);
+      const q1Decision = totalInvoices >= approvalThreshold ? "Solicitar aprobación" : "Registrar sin observación";
+      {
+        const correct = q1Decision;
+        const distractors = ["Solicitar soporte", "Bloquear pago", "Enviar a archivo"];
+        const placed = placeOptions(correct, distractors, pick(digits, 4));
+        q.push({
+          id: "q1",
+          title: "Decisión final en caja administradora",
+          prompt: "¿Qué decisión final genera el algoritmo al terminar la lectura de las facturas?",
+          concept: "Se parece a los ejercicios de acumulador vistos en clase, pero aquí el objetivo no es solo sumar, sino decidir qué hacer con el total obtenido.",
+          material: "Material relacionado: ejemplos de while/for con seguimiento del estado de variables y análisis de resultados.",
+          debugHint: "Si quieres verificarlo, agrega temporalmente `print(total, decision)` debajo de la línea 08. En Thonny también puedes ver cómo cambian las variables desde el panel Variables.",
+          code: numberedCode([
+            `facturas = [${invoiceValues.join(", ")}]`,
+            "total = 0",
+            "for valor in facturas:",
+            "    total = total + valor",
+            `if total >= ${approvalThreshold}:`,
+            '    decision = "Solicitar aprobación"',
+            "else:",
+            '    decision = "Registrar sin observación"'
+          ]),
+          options: placed.finalOptions,
+          correctIndex: placed.correctIndex,
+          explain: `El total leído es ${invoiceValues.join(" + ")} = ${totalInvoices}. Como el tope de decisión es ${approvalThreshold}, la decisión final correcta es "${q1Decision}".`
+        });
+      }
+
+      {
+        const correct = "29, 30 y 31";
+        const distractors = ["10, 15 y 20", "30, 30 y 30", "1, 2 y 3"];
+        const placed = placeOptions(correct, distractors, pick(digits, 5));
+        q.push({
+          id: "q2",
+          title: "Casos de prueba para novedad de nómina",
+          prompt: "¿Qué conjunto de valores sirve mejor para probar la condición clave del algoritmo?",
+          concept: "En pruebas de escritorio no basta con meter números al azar: debes revisar un caso menor al límite, uno igual y uno mayor.",
+          material: "Material relacionado: actividades de selección de datos de prueba y verificación de primitivas selectivas.",
+          debugHint: "Si ejecutas el código en Thonny, puedes cambiar manualmente el valor de `dias_trabajados` y observar la variable `resultado` en el panel Variables. Si no ves el panel, abre Ver > Variables.",
+          code: numberedCode([
+            "dias_trabajados = valor_ingresado",
+            "if dias_trabajados >= 30:",
+            '    resultado = "Nómina completa"',
+            "else:",
+            '    resultado = "Revisar novedad"'
+          ]),
+          options: placed.finalOptions,
+          correctIndex: placed.correctIndex,
+          explain: "La mejor prueba es 29, 30 y 31 porque verifica un valor por debajo del límite, uno justo en el límite y uno por encima."
+        });
+      }
+
+      {
+        const correctPassword = `admin${pick(digits, 0)}${pick(digits, 1)}${pick(digits, 2)}`;
+        const includeCorrect = pick(digits, 3) % 2 === 0;
+        const attempts = includeCorrect
+          ? [`"${pick(digits, 4)}${pick(digits, 5)}${pick(digits, 6)}"`, `"${correctPassword}"`, `"${pick(digits, 7)}${pick(digits, 8)}${pick(digits, 9)}"`]
+          : [`"${pick(digits, 4)}${pick(digits, 5)}${pick(digits, 6)}"`, `"${pick(digits, 6)}${pick(digits, 7)}${pick(digits, 8)}"`, `"${pick(digits, 7)}${pick(digits, 8)}${pick(digits, 9)}"`];
+        const decision = includeCorrect ? "Abrir sistema" : "Bloquear acceso";
+        const placed = placeOptions(decision, ["Pedir nuevo intento", "Enviar a archivo", "No evaluar nada"], pick(digits, 6));
+        q.push({
+          id: "q3",
+          title: "Decisión de acceso al sistema de cartera",
+          prompt: "Según las claves probadas, ¿qué decisión final toma el algoritmo?",
+          concept: "Se parece a los ejercicios de validación repetitiva con while/for y al seguimiento del estado de una variable booleana.",
+          material: "Material relacionado: ejercicios de control de acceso, intentos y cambio de estado de variables.",
+          debugHint: "Para confirmarlo, agrega `print(intentos, autorizado, decision)` debajo de la línea 12. También puedes observar esas variables en Thonny tras ejecutar el programa.",
+          code: numberedCode([
+            `claves = [${attempts.join(", ")}]`,
+            `correcta = "${correctPassword}"`,
+            "autorizado = False",
+            "intentos = 0",
+            "for clave in claves:",
+            "    intentos = intentos + 1",
+            "    if clave == correcta:",
+            "        autorizado = True",
+            "if autorizado:",
+            '    decision = "Abrir sistema"',
+            "else:",
+            '    decision = "Bloquear acceso"'
+          ]),
+          options: placed.finalOptions,
+          correctIndex: placed.correctIndex,
+          explain: includeCorrect
+            ? `Dentro de la lista sí aparece la clave correcta "${correctPassword}", por eso la variable autorizado termina en True y la decisión final es "Abrir sistema".`
+            : `La clave correcta "${correctPassword}" no aparece en la lista, por eso autorizado queda en False y la decisión final es "Bloquear acceso".`
+        });
+      }
+
+      {
+        const base = 100 + (pick(digits, 0) * 10) + pick(digits, 1);
+        const step = (pick(digits, 2) % 4) + 1;
+        const invoices = [0, 1, 2, 3].map((n) => base + (n * step));
+        const targetPosition = (pick(digits, 3) % 3) + 2;
+        const target = invoices[targetPosition - 1];
+        const placed = placeOptions(String(targetPosition), ["1", "2", "3", "4"].filter((x) => x !== String(targetPosition)).slice(0, 3), pick(digits, 7));
+        q.push({
+          id: "q4",
+          title: "Ubicación de una factura dentro de la lista",
+          prompt: "¿En qué turno queda guardado el valor de `turno_encontrado` cuando aparece la factura buscada?",
+          concept: "Se parece al ejemplo de búsqueda secuencial visto en clase, pero aplicado a facturas en lugar de a una rifa.",
+          material: "Material relacionado: ejercicios de recorrido secuencial y localización de un valor dentro de una lista.",
+          debugHint: "Si quieres verificar la ubicación, agrega `print(posicion_en_lista, turno_encontrado)` debajo de la línea 08 para ver en qué momento cambia la variable.",
+          code: numberedCode([
+            `facturas = [${invoices.join(", ")}]`,
+            `factura_buscada = ${target}`,
+            "turno_encontrado = 0",
+            "posicion_en_lista = 0",
+            "for factura in facturas:",
+            "    posicion_en_lista = posicion_en_lista + 1",
+            "    if factura == factura_buscada:",
+            "        turno_encontrado = posicion_en_lista"
+          ]),
+          options: placed.finalOptions,
+          correctIndex: placed.correctIndex,
+          explain: `La factura buscada es ${target} y está ubicada en la posición ${targetPosition} de la lista. Por eso el valor final de turno_encontrado es ${targetPosition}.`
+        });
+      }
+
+      {
+        const targetArea = "Cartera";
+        const areas = ["Compras", targetArea, "Archivo", targetArea, "Talento Humano"];
+        const countTarget = (pick(digits, 4) % 2) + 1;
+        if (countTarget === 1) {
+          areas[3] = "Tesorería";
+        }
+        const threshold = 2;
+        const found = areas.filter((item) => item === targetArea).length;
+        const decision = found >= threshold ? "Escalar a coordinación" : "Continuar revisión normal";
+        const placed = placeOptions(decision, ["Archivar todo", "Bloquear pagos", "No revisar nada"], pick(digits, 8));
+        q.push({
+          id: "q5",
+          title: "Decisión según cantidad de casos en cartera",
+          prompt: "¿Qué decisión final toma el algoritmo después de revisar las áreas reportadas?",
+          concept: "Aquí el contador ayuda a tomar una decisión administrativa: no interesa solo saber el número, sino qué hacer con él.",
+          material: "Material relacionado: ciclos for con contador y clasificación de elementos por condición.",
+          debugHint: "Puedes agregar `print(area, casos_cartera)` debajo de la línea 05 para ver cómo sube el contador. En Thonny ese seguimiento también se observa desde Variables.",
+          code: numberedCode([
+            `areas = ["${areas.join('", "')}"]`,
+            "casos_cartera = 0",
+            "for area in areas:",
+            '    if area == "Cartera":',
+            "        casos_cartera = casos_cartera + 1",
+            "if casos_cartera >= 2:",
+            '    decision = "Escalar a coordinación"',
+            "else:",
+            '    decision = "Continuar revisión normal"'
+          ]),
+          options: placed.finalOptions,
+          correctIndex: placed.correctIndex,
+          explain: `La palabra "Cartera" aparece ${found} veces. Como el límite de escalamiento es 2, la decisión correcta es "${decision}".`
+        });
+      }
+
+      {
+        const correct = "Debajo de la línea 04, dentro del ciclo";
+        const distractors = ["Antes de la línea 01", "Solo debajo de la línea 06, al final", "En la misma línea 02, reemplazando la variable"];
+        const placed = placeOptions(correct, distractors, pick(digits, 9));
+        q.push({
+          id: "q6",
+          title: "Dónde observar el cambio de una variable",
+          prompt: "Si quisieras ver cómo cambia el valor de `saldo_pendiente` después de cada pago registrado, ¿dónde pondrías la instrucción `print(saldo_pendiente)`?",
+          concept: "Esta pregunta evalúa comprensión del flujo del algoritmo: para observar todos los cambios, la instrucción debe ir donde la variable realmente se actualiza repetidamente.",
+          material: "Material relacionado: ejercicios de seguimiento paso a paso del estado de las variables.",
+          debugHint: "Recuerda: si no quieres insertar `print`, en Thonny puedes usar Ver > Variables y ejecutar el programa paso a paso.",
+          code: numberedCode([
+            "pagos = [120000, 80000, 50000]",
+            "saldo_pendiente = 300000",
+            "for pago in pagos:",
+            "    saldo_pendiente = saldo_pendiente - pago",
+            "if saldo_pendiente <= 0:",
+            '    estado = "Cuenta al día"'
+          ]),
+          options: placed.finalOptions,
+          correctIndex: placed.correctIndex,
+          explain: "La línea 04 es donde la variable cambia en cada iteración. Si pones el print justo debajo de esa línea, verás todos los valores intermedios del saldo."
+        });
+      }
+
+      {
+        const correct = "Un for, porque la cantidad de facturas ya es conocida";
+        const distractors = [
+          "Un while infinito, porque así siempre recorre más",
+          "Un if, porque solo compara una vez",
+          "Ninguna estructura, porque solo se puede hacer en Excel"
+        ];
+        const placed = placeOptions(correct, distractors, pick(digits, 1));
+        q.push({
+          id: "q7",
+          title: "Elegir la estructura más conveniente",
+          prompt: "¿Qué estructura es más apropiada para revisar una lista ya conocida de 12 facturas pendientes?",
+          concept: "La elección del ciclo también es parte de la toma de decisiones: si ya conoces la cantidad de elementos, el for suele ser la opción más clara.",
+          material: "Material relacionado: comparación entre while y for en los talleres de bucles.",
+          debugHint: "Aquí no hace falta ejecutar el código: la clave es decidir qué estructura se adapta mejor a una lista de tamaño conocido.",
+          code: numberedCode([
+            "Situación:",
+            "Hay 12 facturas pendientes",
+            "y deben revisarse una por una",
+            "hasta terminar la lista completa."
+          ]),
+          options: placed.finalOptions,
+          correctIndex: placed.correctIndex,
+          explain: "Como la cantidad de elementos ya está definida desde el inicio, un for expresa mejor el recorrido completo de la lista."
+        });
+      }
+
+      {
+        const rows = [
+          { area: "Compras", error: "SI" },
+          { area: "Compras", error: pick(digits, 2) % 2 === 0 ? "SI" : "NO" },
+          { area: "Archivo", error: "SI" },
+          { area: "Compras", error: "NO" }
+        ];
+        const errorsInCompras = rows.filter((row) => row.area === "Compras" && row.error === "SI").length;
+        const errorLimit = 2;
+        const decision = errorsInCompras >= errorLimit ? "Activar auditoría" : "Continuar proceso";
+        const placed = placeOptions(decision, ["Anular archivo", "Cerrar hoja", "No contar nada"], pick(digits, 2));
+        q.push({
+          id: "q8",
+          title: "Lectura de un CSV para decidir auditoría",
+          prompt: "Después de revisar las filas del archivo, ¿qué decisión toma el algoritmo?",
+          concept: "Este ejercicio usa un contador condicional para apoyar una decisión administrativa sobre control y auditoría.",
+          material: "Material relacionado: prácticas con tablas y archivos CSV para filtrar y contar condiciones.",
+          debugHint: "Si quieres comprobarlo, agrega `print(fila, errores_compras)` debajo de la línea 06 o revisa esa variable en Thonny.",
+          code: numberedCode([
+            "filas = [",
+            `    ["Compras", "${rows[0].error}"],`,
+            `    ["Compras", "${rows[1].error}"],`,
+            `    ["Archivo", "${rows[2].error}"],`,
+            `    ["Compras", "${rows[3].error}"]`,
+            "]",
+            "errores_compras = 0",
+            "for fila in filas:",
+            '    if fila[0] == "Compras" and fila[1] == "SI":',
+            "        errores_compras = errores_compras + 1",
+            "if errores_compras >= 2:",
+            '    decision = "Activar auditoría"',
+            "else:",
+            '    decision = "Continuar proceso"'
+          ]),
+          options: placed.finalOptions,
+          correctIndex: placed.correctIndex,
+          explain: `En las filas de Compras, la marca de error aparece ${errorsInCompras} veces. Por eso la decisión correcta es "${decision}".`
+        });
+      }
+
+      {
+        const smmlv = 1500000;
+        const auxThreshold = smmlv * 2;
+        const correct = `${auxThreshold - 1}, ${auxThreshold}, ${auxThreshold + 1}`;
+        const distractors = [`${auxThreshold}, ${auxThreshold}, ${auxThreshold}`, "1000000, 1200000 y 1300000", "2000000, 2500000 y 3000000"];
+        const placed = placeOptions(correct, distractors, pick(digits, 3));
+        q.push({
+          id: "q9",
+          title: "Pruebas para una regla simplificada de nómina en Colombia",
+          prompt: "Usando este ejemplo simplificado de auxilio de transporte, ¿qué conjunto de salarios sirve mejor para probar el límite?",
+          concept: "El ejemplo es pedagógico: no busca reemplazar la norma real, sino practicar la lógica de decisión alrededor de un umbral.",
+          material: "Material relacionado: selección de valores de prueba para condiciones y toma de decisiones.",
+          debugHint: "Puedes ejecutar el código en Thonny cambiando manualmente `salario` por distintos valores. Observa la variable `recibe_auxilio` desde Ver > Variables.",
+          code: numberedCode([
+            `smmlv = ${smmlv}`,
+            "tope_auxilio = 2 * smmlv",
+            "salario = valor_ingresado",
+            "if salario <= tope_auxilio:",
+            "    recibe_auxilio = True",
+            "else:",
+            "    recibe_auxilio = False"
+          ]),
+          options: placed.finalOptions,
+          correctIndex: placed.correctIndex,
+          explain: `Para probar bien la condición, debes usar un salario por debajo del tope (${auxThreshold - 1}), uno igual (${auxThreshold}) y uno por encima (${auxThreshold + 1}).`
+        });
+      }
+
+      {
+        const soporteRows = [
+          ["Factura", "NO"],
+          ["Factura", pick(digits, 4) % 2 === 0 ? "SI" : "NO"],
+          ["Recibo", "SI"],
+          ["Factura", "NO"]
+        ];
+        const missingSupport = soporteRows.filter((row) => row[0] === "Factura" && row[1] === "NO").length;
+        const decision = missingSupport >= 2 ? "Solicitar soportes antes de pagar" : "Continuar con el pago";
+        const placed = placeOptions(decision, ["Archivar sin revisar", "Eliminar facturas", "Cerrar el sistema"], pick(digits, 4));
+        q.push({
+          id: "q10",
+          title: "Revisión de soportes antes del pago",
+          prompt: "Con base en las filas analizadas, ¿qué recomendación final genera el algoritmo?",
+          concept: "Aquí la variable clave sustenta una decisión de control documental, no solo un cálculo. Eso conecta mejor con la toma de decisiones administrativas.",
+          material: "Material relacionado: lectura de listas, condiciones y decisiones derivadas del estado de una variable.",
+          debugHint: "Si quieres revisar el comportamiento, agrega `print(fila, facturas_sin_soporte)` debajo de la línea 06. Así verás en qué momento sube el conteo.",
+          code: numberedCode([
+            "filas = [",
+            `    ["${soporteRows[0][0]}", "${soporteRows[0][1]}"],`,
+            `    ["${soporteRows[1][0]}", "${soporteRows[1][1]}"],`,
+            `    ["${soporteRows[2][0]}", "${soporteRows[2][1]}"],`,
+            `    ["${soporteRows[3][0]}", "${soporteRows[3][1]}"]`,
+            "]",
+            "facturas_sin_soporte = 0",
+            "for fila in filas:",
+            '    if fila[0] == "Factura" and fila[1] == "NO":',
+            "        facturas_sin_soporte = facturas_sin_soporte + 1",
+            "if facturas_sin_soporte >= 2:",
+            '    decision = "Solicitar soportes antes de pagar"',
+            "else:",
+            '    decision = "Continuar con el pago"'
+          ]),
+          options: placed.finalOptions,
+          correctIndex: placed.correctIndex,
+          explain: `Hay ${missingSupport} facturas sin soporte suficiente. Por eso la decisión final correcta es "${decision}".`
+        });
+      }
+
+      return q;
+    }
+
+    function renderQuestions() {
+      questionsHost.innerHTML = questions.map((question, index) => {
+        const optionsHtml = question.options.map((option, optionIndex) => `
+          <label class="option">
+            <input type="radio" name="${question.id}" value="${optionIndex}">
+            <span>${escapeHtml(option)}</span>
+          </label>
+        `).join("");
+
+        return `
+          <section class="question">
+            <div class="question-number">Pregunta ${index + 1}</div>
+            <h2>${escapeHtml(question.title)}</h2>
+            <div class="scenario"><pre>${escapeHtml(question.code)}</pre></div>
+            <p>${escapeHtml(question.prompt)}</p>
+            <div class="note"><strong>Concepto:</strong> ${escapeHtml(question.concept)}<br><strong>Se parece a clase porque:</strong> ${escapeHtml(question.material)}</div>
+            <div class="debug-tip"><strong>Verificación sugerida:</strong> ${escapeHtml(question.debugHint)}</div>
+            ${optionsHtml}
+            <div id="${question.id}Feedback" class="question-feedback hidden"></div>
+          </section>
+        `;
+      }).join("");
+    }
+
+    function getAnswers() {
+      const answers = {};
+      questions.forEach((question) => {
+        const selected = document.querySelector(`input[name="${question.id}"]:checked`);
+        const value = selected ? Number(selected.value) : null;
+        answers[question.id] = {
+          value,
+          label: value === null ? "Sin responder" : question.options[value]
+        };
+      });
+      return answers;
+    }
+
+    function renderFeedback(answers) {
+      questions.forEach((question) => {
+        const answer = answers[question.id];
+        const correct = answer.value === question.correctIndex;
+        const box = document.getElementById(`${question.id}Feedback`);
+        const correctOption = question.options[question.correctIndex];
+        box.className = `question-feedback ${correct ? "correct" : "wrong"}`;
+        box.textContent = correct
+          ? `Respuesta correcta: ${correctOption}. ${question.explain} El estudiante será interrogado para justificar por qué esta respuesta es correcta.`
+          : `Respuesta incorrecta. La correcta era: ${correctOption}. ${question.explain}`;
+      });
+    }
+
+    function renderHistoryTable(previousAttempts, currentAttempt) {
+      const rows = [
+        ...previousAttempts.map((attempt) => ({
+          ...attempt,
+          isCurrent: false
+        })),
+        {
+          attemptNumber: currentAttempt.attemptNumber,
+          score: currentAttempt.score,
+          startAt: currentAttempt.startAt,
+          endAt: currentAttempt.endAt,
+          duration: currentAttempt.duration,
+          isCurrent: true
+        }
+      ].sort((a, b) => Number(a.attemptNumber) - Number(b.attemptNumber));
+
+      historyBody.innerHTML = rows.map((attempt) => `
+        <tr class="${attempt.isCurrent ? "current-row" : ""}">
+          <td>${escapeHtml(attempt.attemptNumber)}</td>
+          <td>${escapeHtml(attempt.score)}</td>
+          <td>${escapeHtml(formatStoredDate(attempt.startAt))}</td>
+          <td>${escapeHtml(formatStoredDate(attempt.endAt))}</td>
+          <td>${escapeHtml(attempt.duration || "")}</td>
+        </tr>
+      `).join("");
+    }
+
+    function buildAnswersText(answers) {
+      return questions.map((question) => `${question.id.toUpperCase()}: ${answers[question.id].label}`).join(" | ");
+    }
+
+    function ensureStarted() {
+      if (state.started) {
+        return true;
+      }
+      alert("Primero debes presionar 'Iniciar parcial'.");
+      return false;
+    }
+
+    function isScreenshotShortcut(event) {
+      const key = (event.key || "").toLowerCase();
+      if (key === "printscreen") {
+        return true;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && ["3", "4", "5", "$", "%"].includes(key)) {
+        return true;
+      }
+      if (event.altKey && key === "printscreen") {
+        return true;
+      }
+      return false;
+    }
+
+    studentIdInput.addEventListener("input", () => {
+      const normalized = normalizeId(studentIdInput.value);
+      studentIdInput.value = normalized;
+
+      if (!state.registryLoaded) {
+        studentNameDisplay.textContent = "La lista todavía se está cargando.";
+        studentNameDisplay.className = "detected-name is-pending";
+        return;
+      }
+
+      if (!normalized) {
+        studentNameDisplay.textContent = "Escribe el documento para validar al estudiante.";
+        studentNameDisplay.className = "detected-name is-pending";
+        return;
+      }
+
+      const studentName = studentRegistry[normalized];
+      if (!studentName) {
+        studentNameDisplay.textContent = "Documento no encontrado en la lista autorizada.";
+        studentNameDisplay.className = "detected-name is-invalid";
+        return;
+      }
+
+      studentNameDisplay.textContent = studentName;
+      studentNameDisplay.className = "detected-name";
+    });
+
+    startBtn.addEventListener("click", () => {
+      if (!state.registryLoaded) {
+        alert("Espera a que cargue la lista de estudiantes.");
+        return;
+      }
+
+      const studentId = normalizeId(studentIdInput.value);
+      const studentName = studentRegistry[studentId] || "";
+
+      if (!studentId) {
+        alert("Escribe el documento de identidad antes de iniciar.");
+        return;
+      }
+
+      if (!studentName) {
+        alert("El documento no está en la lista autorizada.");
+        return;
+      }
+
+      state.studentId = studentId;
+      state.studentName = studentName;
+      state.attemptNumber = getNextAttemptNumber(studentId);
+      state.startDate = new Date();
+      state.started = true;
+
+      questions = buildQuestions(studentId);
+      renderQuestions();
+
+      startTimeLabel.textContent = formatTime(state.startDate);
+      statusBar.classList.remove("hidden");
+      examForm.classList.remove("hidden");
+      startBtn.disabled = true;
+      studentIdInput.disabled = true;
+      startHint.textContent = "Parcial en curso. Lee cada escenario y usa las notas de apoyo si necesitas recordar el concepto.";
+      updateTimer();
+      state.timerId = setInterval(updateTimer, 1000);
+      window.scrollTo({ top: statusBar.offsetTop - 10, behavior: "smooth" });
+    });
+
+    document.addEventListener("copy", () => {
+      if (!state.started || state.finished) {
+        return;
+      }
+      state.copyCount += 1;
+      updateIntegrityCounters();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (!state.started || state.finished) {
+        return;
+      }
+
+      const key = (event.key || "").toLowerCase();
+      if ((event.ctrlKey || event.metaKey) && key === "c") {
+        state.ctrlCCount += 1;
+      }
+      if (isScreenshotShortcut(event)) {
+        state.screenshotCount += 1;
+      }
+      updateIntegrityCounters();
+    });
+
+    examForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      if (!ensureStarted()) {
+        return;
+      }
+
+      const answers = getAnswers();
+      const correctCount = questions.reduce((sum, question) => sum + (answers[question.id].value === question.correctIndex ? 1 : 0), 0);
+      const score = (correctCount / questions.length) * 5;
+
+      state.finished = true;
+      state.endDate = new Date();
+      clearInterval(state.timerId);
+
+      renderFeedback(answers);
+
+      scoreBig.textContent = score.toFixed(1);
+      resultMessage.textContent = `Obtuviste ${correctCount} respuestas correctas de ${questions.length}.`;
+      resultAttempt.textContent = state.attemptNumber;
+      resultStart.textContent = formatTime(state.startDate);
+      resultEnd.textContent = formatTime(state.endDate);
+      resultCopies.textContent = state.copyCount;
+      resultScreenshots.textContent = state.screenshotCount;
+      resultCtrlC.textContent = state.ctrlCCount;
+      resultSummary.textContent = score >= 3
+        ? "Resultado aprobatorio. Aun así, las respuestas correctas deberán poder justificarse oralmente con base en el comportamiento de las variables."
+        : "Resultado por fortalecer. Revisa con atención las explicaciones por pregunta y la relación entre variables, condiciones y decisiones.";
+
+      const answersText = buildAnswersText(answers);
+      const previousAttempts = await loadAttemptHistory(state.studentId);
+      renderHistoryTable(previousAttempts, {
+        attemptNumber: state.attemptNumber,
+        score: score.toFixed(1),
+        startAt: state.startDate.toISOString(),
+        endAt: state.endDate.toISOString(),
+        duration: timerLabel.textContent
+      });
+
+      postTrackingEvent({
+        eventType: "attempt_finished",
+        sessionId: state.sessionId,
+        studentId: state.studentId,
+        studentName: state.studentName,
+        attemptNumber: state.attemptNumber,
+        pageOpenedAt: state.pageOpenedAt.toISOString(),
+        identifiedAt: state.pageOpenedAt.toISOString(),
+        startAt: state.startDate.toISOString(),
+        endAt: state.endDate.toISOString(),
+        duration: timerLabel.textContent,
+        copyCount: state.copyCount,
+        ctrlCCount: state.ctrlCCount,
+        screenshotCount: state.screenshotCount,
+        correctCount,
+        score: score.toFixed(1),
+        answersText,
+        answers
+      });
+
+      resultCard.classList.remove("hidden");
+      resultCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    loadStudentRegistry();
+  </script>
+</body>
+</html>
