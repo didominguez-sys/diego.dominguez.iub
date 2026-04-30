@@ -415,13 +415,13 @@
         </div>
         <div>
           <label>Nombre detectado</label>
-          <div id="studentNameDisplay" class="detected-name is-pending">Cargando lista de estudiantes autorizados desde Google Sheets.</div>
+          <div id="studentNameDisplay" class="detected-name is-pending">Preparando lista de estudiantes autorizados.</div>
         </div>
       </div>
       <div class="actions">
         <button id="startBtn" class="primary" type="button">Iniciar parcial</button>
       </div>
-      <p class="muted" id="startHint">Espera a que la lista de estudiantes se cargue antes de iniciar.</p>
+      <p class="muted" id="startHint">Escribe el documento para validar al estudiante antes de iniciar.</p>
     </section>
 
     <div id="statusBar" class="status-bar hidden">
@@ -492,7 +492,57 @@
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwVtqoacxMFPhaWGHL_4BpgUsxx3Aq-o3c9N5zw89QM3sMYTP_61QSGUaKtW18pyygn/exec";
 
-    let studentRegistry = {};
+    const STUDENT_REGISTRY = Object.freeze({
+      "1044613519": "AGUILAR DIAZ ANDREA SARAY",
+      "1007071084": "BERRIO JULIO BLEIDYS",
+      "1048067607": "BORJAS ACOSTA LUNA ALLISON",
+      "1001945483": "BRAVO CABRALES ALEJANDRA",
+      "1043129988": "DE LA HOZ ALTAMAR ISABEL MARIA",
+      "1010149208": "ESCORCIA MCAUSLAND YARLEYDIS PATRICIA",
+      "1129507060": "FONSECA MUÑOZ SANTIAGO JOSE",
+      "1100394417": "HERAZO PEREZ LUIS JAVIER",
+      "1044390913": "HERNANDEZ AVILA ESTELIA DEL CARMEN",
+      "1001997276": "HERNANDEZ GÓMEZ CESAR JUNIOR",
+      "1092185876": "JIMÉNEZ LOPEZ MARYURIS ARLE",
+      "1043665596": "MANZANO PACHECO DANIELA LORENA",
+      "1001890709": "MARTÍNEZ MARTÍNEZ MICHEL PAOLA",
+      "1043134727": "MORENO BELTRÁN LUIS ANGEL",
+      "1096801658": "OLIVEROS SIERRA LUISA FERNANDA",
+      "1193593988": "OSORIO OLIVERA VALENTINA",
+      "1028400620": "ROA SIZA VERONICA",
+      "1143115658": "VEGA GÓMEZ VALERYN ANDREA",
+      "1143125681": "DOMÍNGUEZ TAPIA DIEGO FABIÁN",
+      "1043158867": "ARIZA DE L A CRUZ YORYELIS PATRICIA",
+      "1001825660": "BEDOYA CUELLO SANTIAGO",
+      "1001780740": "CASARRUBIA PUELLO LINA MARCELA",
+      "1130268931": "CORREA BARROSO YARID SHADAY",
+      "1044619786": "ESTRADA GOMEZ LUIS EDUARDO",
+      "1042132495": "FLÓREZ CHAVARRO HILARY JOHANA",
+      "1046337032": "GONZALEZ CANTILLO GERAL JUNIOR",
+      "1130271420": "GONZALEZ ZAMORA JHONLUIS",
+      "1102580605": "HERNÁNDEZ MENCO GABRIELA",
+      "1085039500": "MARTINEZ DURAN ROYSA",
+      "1043442844": "MERIÑO SILVERA ARNOLD JUNIOR",
+      "1193548488": "OLIVEROS CAMACHO LAIZA LEM",
+      "1001876950": "PALENCIA RODRIGUEZ MELANY ESTHER",
+      "1043669582": "PEREZ RODRIGUEZ LARITZA JOHANA",
+      "1002231958": "PEREZ SANCHEZ JULIETH PAOLA",
+      "1043434221": "PERTUZ VILLEGAS DANA SOFIA",
+      "1044622270": "PUGLIESE HERNANDEZ CAROLINE MICHELLE",
+      "1043443869": "REALES PRETELL GABRIELA MARIA",
+      "1129505964": "REALES TOVAR YEIMY SADRIT",
+      "1143120550": "REDONDO LAURENS MARIA JOSE",
+      "1048064753": "RESTREPO FLOREZ JASSLEYDYS SHARIK",
+      "1043129840": "RODELO JULIO GLADYS ISABEL",
+      "1044624710": "RODRIGUEZ MANGA SOFIA",
+      "1129534156": "SARMIENTO MELENDEZ MAILYN VANESSA",
+      "1007892916": "SENIOR GONZALEZ YULEYDIS MARIA",
+      "1192714188": "UCROS ZAMBRANO VALENTINA",
+      "1042249560": "VALDÉS VALIENTE CARLOS ANDRÉS",
+      "1045691499": "VIDAL ORTIZ SABRINA ISABEL"
+    });
+
+    let studentRegistry = { ...STUDENT_REGISTRY };
     let questions = [];
 
     const state = {
@@ -628,57 +678,13 @@
     }
 
     function loadStudentRegistry() {
-      return new Promise((resolve) => {
-        const callbackName = `studentsCallback_${Date.now()}`;
-        const script = document.createElement("script");
-        const timeoutId = window.setTimeout(() => {
-          cleanup();
-          studentNameDisplay.textContent = "No se pudo cargar la lista de estudiantes.";
-          studentNameDisplay.className = "detected-name is-invalid";
-          startHint.textContent = "Falló la carga de la lista desde Google Sheets.";
-          resolve(false);
-        }, 12000);
-
-        function cleanup() {
-          window.clearTimeout(timeoutId);
-          if (script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
-          try {
-            delete window[callbackName];
-          } catch (error) {
-            window[callbackName] = undefined;
-          }
-        }
-
-        window[callbackName] = (payload) => {
-          cleanup();
-          if (!payload || !payload.ok || !payload.students) {
-            studentNameDisplay.textContent = "La lista recibida es inválida.";
-            studentNameDisplay.className = "detected-name is-invalid";
-            startHint.textContent = "Revisa la configuración del Apps Script.";
-            resolve(false);
-            return;
-          }
-          studentRegistry = payload.students;
-          state.registryLoaded = true;
-          studentNameDisplay.textContent = "Lista cargada. Escribe el documento para validar al estudiante.";
-          studentNameDisplay.className = "detected-name is-pending";
-          startHint.textContent = "La lista de estudiantes ya está cargada.";
-          startBtn.disabled = false;
-          resolve(true);
-        };
-
-        script.src = `${WEB_APP_URL}?action=students&callback=${encodeURIComponent(callbackName)}`;
-        script.onerror = () => {
-          cleanup();
-          studentNameDisplay.textContent = "No fue posible conectar con el web app.";
-          studentNameDisplay.className = "detected-name is-invalid";
-          startHint.textContent = "Verifica la URL del web app.";
-          resolve(false);
-        };
-        document.body.appendChild(script);
-      });
+      studentRegistry = { ...STUDENT_REGISTRY };
+      state.registryLoaded = true;
+      studentNameDisplay.textContent = "Lista incorporada. Escribe el documento para validar al estudiante.";
+      studentNameDisplay.className = "detected-name is-pending";
+      startHint.textContent = "La lista de estudiantes está incorporada en este archivo.";
+      startBtn.disabled = false;
+      return Promise.resolve(true);
     }
 
     function loadAttemptHistory(studentId) {
